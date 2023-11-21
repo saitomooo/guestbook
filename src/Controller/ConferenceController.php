@@ -21,3 +21,4 @@ class ConferenceController extends AbstractController
                 );
     }
 }
+
