@@ -24,7 +24,7 @@ class ConferenceController extends AbstractController
                         'conferences' => $conferenceRepository->findAll(),
                     ]));
     }
-    #[Route('/conference/{id}', name: 'conference')]
+    #[Route('/conference/{slug}', name: 'conference')]
     public function show(Request $request, int $id, ConferenceRepository $conferenceRepository, CommentRepository $commentRepository): Response
     {
         $conference = $conferenceRepository->find($id);
