@@ -54,13 +54,18 @@ class CommentMessageHandler implements MessageHandlerInterface
             
                         $this->bus->dispatch($message);
                     } elseif ($this->workflow->can($comment, 'publish') || $this->workflow->can($comment, 'publish_ham')) {
-                        $this->mailer->send((new NotificationEmail())
-                                        ->subject('New comment posted')
-                                        ->htmlTemplate('emails/comment_notification.html.twig')
-                                        ->from($this->adminEmail)
-                                        ->to($this->adminEmail)
-                                        ->context(['comment' => $comment])
-                                    );
+                        try {
+                            $this->mailer->send((new NotificationEmail())
+                                ->subject('New comment posted')
+                                ->htmlTemplate('emails/comment_notification.html.twig')
+                                ->from($this->adminEmail)
+                                ->to($this->adminEmail)
+                                ->context(['comment' => $comment])
+                            );
+                        } catch (\Exception $e) {
+                            // エラーログを記録
+                            $this->logger->error('メール送信中にエラーが発生しました: ' . $e->getMessage());
+                        }
                     } elseif ($this->logger) {
                         $this->logger->debug('Dropping comment message', ['comment' => $comment->getId(), 'state' => $comment->getState()]);
                     }
