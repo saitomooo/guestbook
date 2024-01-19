@@ -9,9 +9,10 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Workflow\WorkflowInterface;
-use Symfony\Bridge\Twig\Mime\NotificationEmail;
+use Symfony\Component\Notifier\NotifierInterface;
+use App\Notification\CommentReviewNotification;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
-use Symfony\Component\Mailer\MailerInterface;
+
 #[AsMessageHandler]
 class CommentMessageHandler
 {
@@ -21,9 +22,8 @@ class CommentMessageHandler
         private CommentRepository $commentRepository,
         private MessageBusInterface $bus,
         private WorkflowInterface $commentStateMachine,
-        private MailerInterface $mailer,
-        #[Autowire('%admin_email%')] private string $adminEmail,
         private ImageOptimizer $imageOptimizer,
+        private NotifierInterface $notifier,
         #[Autowire('%photo_dir%')] private string $photoDir,
         private ?LoggerInterface $logger = null,
     ){
@@ -50,13 +50,7 @@ class CommentMessageHandler
             $this->logger?->debug('Processed comment: accept', ['comment' => $comment->getId(), 'transition' => $transition]);
         } elseif ($this->commentStateMachine->can($comment, 'publish') || $this->commentStateMachine->can($comment, 'publish_ham')) {
             try {
-                $this->mailer->send((new NotificationEmail())
-                    ->subject('New comment posted')
-                    ->htmlTemplate('emails/comment_notification.html.twig')
-                    ->from($this->adminEmail)
-                    ->to($this->adminEmail)
-                    ->context(['comment' => $comment])
-                );
+                $this->notifier->send(new CommentReviewNotification($comment), ...$this->notifier->getAdminRecipients());
                 $this->logger?->debug('Mail sent for comment', ['comment' => $comment->getId()]);
             } catch (\Throwable $e) {
                 $this->logger?->error('Mail sending failed', ['exception' => $e->getMessage()]);
