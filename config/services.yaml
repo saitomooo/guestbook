@@ -5,7 +5,7 @@
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
     photo_dir: "%kernel.project_dir%/public/uploads/photos"
-    default_admin_email: admin@example.com
+    default_admin_email: admin@email.com
     admin_email: "%env(string:default:default_admin_email:ADMIN_EMAIL)%"
     default_domain: '127.0.0.1'
     default_scheme: 'http'

@@ -50,7 +50,9 @@ class CommentMessageHandler
             $this->logger?->debug('Processed comment: accept', ['comment' => $comment->getId(), 'transition' => $transition]);
         } elseif ($this->commentStateMachine->can($comment, 'publish') || $this->commentStateMachine->can($comment, 'publish_ham')) {
             try {
-                $this->notifier->send(new CommentReviewNotification($comment), ...$this->notifier->getAdminRecipients());
+
+                $notification = new CommentReviewNotification($comment, $message->getReviewUrl());
+                $this->notifier->send($notification, ...$this->notifier->getAdminRecipients());
                 $this->logger?->debug('Mail sent for comment', ['comment' => $comment->getId()]);
             } catch (\Throwable $e) {
                 $this->logger?->error('Mail sending failed', ['exception' => $e->getMessage()]);
