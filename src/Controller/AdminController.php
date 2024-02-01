@@ -11,6 +11,7 @@ use Symfony\Component\Messenger\MessageBusInterface;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Workflow\Registry;
 use Twig\Environment;
+use App\Repository\CommentRepository;
 use Symfony\Component\HttpKernel\HttpCache\StoreInterface;
 use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
@@ -29,10 +30,10 @@ class AdminController extends AbstractController
     }
 
     #[Route('/comment/review/{id}', name: 'review_comment')]
-    public function reviewComment(Request $request, Comment $comment, Registry $registry): Response
+    public function reviewComment(Request $request, Int $id,CommentRepository $commentRepository, Registry $registry): Response
     {
         $accepted = !$request->query->get('reject');
-
+        $comment = $commentRepository->findOneBy(['id' => $id]);
         $machine = $registry->get($comment);
         if ($machine->can($comment, 'publish')) {
             $transition = $accepted ? 'publish' : 'reject';
